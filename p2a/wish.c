@@ -29,12 +29,12 @@ int command_path(char* args[], int numArgs){
     } 
     return 0;
 }
-int lineSeperate(char* line, char* args[]) {
+int lineSeperate(char* line, char* args[], char* delim) {
     char *save;
     int argsIndex = 0;
-    args[argsIndex++] = strtok_r(line, " ", &save);
+    args[argsIndex++] = strtok_r(line, delim, &save);
     while(1){
-        args[argsIndex] = strtok_r(NULL, " ",&save);
+        args[argsIndex] = strtok_r(NULL, delim,&save);
         if (args[argsIndex] == NULL)
             break;
         argsIndex++;
@@ -46,23 +46,34 @@ int redirect(char* ret, char* line) {
     char* retArgs[100];
     ret[0] = '\0';
     ret = ret + 2;
-    lineSeperate(line, progArgs);
-    int retArgc = lineSeperate(ret, retArgs);
+    lineSeperate(line, progArgs, " ");
+    int retArgc = lineSeperate(ret, retArgs, " ");
     if (retArgc != 1)
         return 1;
     execute(progArgs, retArgs);
 
-
     return 0; 
 }
+int parallel(char* ret, char* line){
+    char* commands[100];
+    int numCommands = lineSeperate(line, commands, "&");
+    char** args[100];
+    for (int i = 0; i < numCommands; i++) {
+        lineSeperate(commands[i], args[i], " ");
+        execute(args[i], NULL);
+    }
 
+    return 0;
+}
 int readCommand(char* args[]){
 
     //for user input
     char* line;
     size_t len = 0;
     ssize_t nread;
-    char* ret = NULL;
+    char* retRedir = NULL;
+    char* retParal = NULL;
+
     if ((nread = getline(&line, &len, stdin)) == -1) {
         printf("Error reading line from user input");
         exit(1);
@@ -74,13 +85,17 @@ int readCommand(char* args[]){
         exit(0);
 
     //for redirection, 
-    if ((ret = strchr(line, '>'))){
-        redirect(ret, line);
+    if ((retRedir = strchr(line, '>'))){
+        redirect(retRedir, line);
         return -1;
     }
-
+    //forparallel commands
+    if ((retParal = strchr(line, '&'))){
+        parallel(retParal, line);
+        return -1;
+    }
     //seperate the line
-    int argsIndex = lineSeperate(line, args);
+    int argsIndex = lineSeperate(line, args, " ");
     //exit if requested
     if (strcmp(args[0], "exit") == 0){
         exit(0);
