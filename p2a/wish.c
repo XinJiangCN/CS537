@@ -9,32 +9,45 @@ int execute(char* args[], char* retArgs[]);
 
 //path for binary files
 char* PATH[100];
+void error_handler(){
+    char error_message[30] = "An error has occurred\n";
+    write(STDERR_FILENO, error_message, strlen(error_message)); 
+}
 int command_cd(char* args[], int numArgs){
     if (numArgs != 2) {
-        printf("Incorrect number of arguments for cd");
-        exit(1);
+        error_handler();
+        return 1;
     }
     if (chdir(args[1]) == -1){
-        printf("Error when trying to cd");
-        exit(1);
+        error_handler();
+        return 1;
     }
     return 0;
 }
 int command_path(char* args[], int numArgs){
-    int i = 0;
+    int i = 1;
     while(1){
-        if((PATH[i] = args[i+1]) == NULL)
+        if((PATH[i] = args[i]) == NULL)
             break;
         i++;
     } 
     return 0;
 }
-int lineSeperate(char* line, char* args[], char* delim) {
+int lineSeperate(char* line, char* args[], char delim) {
     char *save;
     int argsIndex = 0;
-    args[argsIndex++] = strtok_r(line, delim, &save);
+    //args = malloc(100*sizeof(char*));
+    if (!args)
+        args = malloc(100*sizeof(char));
+    args[argsIndex] = strtok_r(line, &delim, &save);
+    argsIndex++;
     while(1){
-        args[argsIndex] = strtok_r(NULL, delim,&save);
+        if (!(args + argsIndex)){
+            char* temp = (char*)(args + argsIndex);
+            temp  = malloc(100*sizeof(char));
+            temp++;
+        }
+        args[argsIndex] = strtok_r(NULL, &delim,&save);
         if (args[argsIndex] == NULL)
             break;
         argsIndex++;
@@ -46,43 +59,47 @@ int redirect(char* ret, char* line) {
     char* retArgs[100];
     ret[0] = '\0';
     ret = ret + 2;
-    lineSeperate(line, progArgs, " ");
-    int retArgc = lineSeperate(ret, retArgs, " ");
+    lineSeperate(line, progArgs, ' ');
+    int retArgc = lineSeperate(ret, retArgs, ' ');
     if (retArgc != 1)
         return 1;
     execute(progArgs, retArgs);
 
+
     return 0; 
 }
 int parallel(char* ret, char* line){
-    char* commands[100];
-    int numCommands = lineSeperate(line, commands, "&");
-    char** args[100];
+    char** commands = malloc(100*sizeof(char*));
+    int numCommands = lineSeperate(line, commands,'&');
+    char*** args = malloc(50*sizeof(char**));
     for (int i = 0; i < numCommands; i++) {
-        lineSeperate(commands[i], args[i], " ");
+        lineSeperate(commands[i], args[i], ' ');
         execute(args[i], NULL);
     }
 
     return 0;
 }
-int readCommand(char* args[]){
+int readCommand(char* args[],FILE * fp){
 
     //for user input
-    char* line;
+    char* line = malloc(100*sizeof(char));
     size_t len = 0;
     ssize_t nread;
     char* retRedir = NULL;
     char* retParal = NULL;
 
-    if ((nread = getline(&line, &len, stdin)) == -1) {
-        printf("Error reading line from user input");
-        exit(1);
+    if ((nread = getline(&line, &len, fp)) == -1) {
+        error_handler();
+        return 1;
     }
+    if ((strcmp(line, "\n") == 0) || (strcmp(line, "") == 0))
+        return -1;
     //omit the last \n of the string
-    line[strlen(line) - 1] = '\0';
+    if (line[strlen(line) - 1] == '\n')
+        line[strlen(line) - 1] = '\0';
     //exit if EOF is read
     if (line[0] == EOF)
-        exit(0);
+        return 1;
 
     //for redirection, 
     if ((retRedir = strchr(line, '>'))){
@@ -95,7 +112,7 @@ int readCommand(char* args[]){
         return -1;
     }
     //seperate the line
-    int argsIndex = lineSeperate(line, args, " ");
+    int argsIndex = lineSeperate(line, args, ' ');
     //exit if requested
     if (strcmp(args[0], "exit") == 0){
         exit(0);
@@ -113,16 +130,16 @@ int readCommand(char* args[]){
 int execute(char* args[], char* retArgs[]){
     int pid;
     int status;
-    char commandPath[100];
+    char* commandPath = malloc(100*sizeof(char*));
     //test where is the expected executable file
     int i = 0; //index of PATH
     while(1) {
         if(PATH[i] == NULL)
             break;
         //copy the original string to a larger space
-        char tempStr[100];
+        char* tempStr = malloc(100*sizeof(char));
         if (!strcpy(tempStr, PATH[i])){
-            printf("strcpy error\n");
+            error_handler();
             return 1;
         }
         int strLen = strlen(tempStr);
@@ -133,16 +150,17 @@ int execute(char* args[], char* retArgs[]){
             strcpy(commandPath, tempStr);
             break;
         }
+        free(tempStr);
     } 
     if (commandPath == NULL) {
-        printf("Expected Executable File Cannot Be Found\n");
+        error_handler();
         return 1;
     } 
     //fork and execute
     pid = fork();
     switch(pid){
         case -1:
-            perror("fork failed");
+            error_handler();
             exit(1);
         case 0:
             if (retArgs){
@@ -163,20 +181,56 @@ int execute(char* args[], char* retArgs[]){
     return 0;
 }
 int main(int argc, char* argv[]){
+    int isBatchMode = 0;
+    PATH[0] = "/bin";
 
+    FILE *fp;
+    char** args;
     //char* userArgs[100] = &argv[1];
-    if (argc != 1) {
-
+    if (argc == 2) {
+        if (!(fp = fopen(argv[1], "r")) ){
+            error_handler();
+            exit(1);
+        }
+        isBatchMode = 1;
+    } else if (argc < 1 || argc > 3) {
+        error_handler();
+        exit(1);
     }
-
+    int isFinish = 0;
     while(1) {
-        printf("wish> ");
-        char* args[100];
-        if (readCommand(args) == -1)
-            continue;   //if a built-in command is called, continue;
-        if (execute(args, NULL) == 1)
-            continue;   //if there is an error, continue
-
+        
+        if (isBatchMode == 1){
+            while(1){
+                args = malloc(100*sizeof(char));
+                int readStatus = readCommand(args, fp);
+                if (readStatus == -1)
+                    continue;
+                if (readStatus == 1) {
+                    isFinish = 1;
+                    break;
+                }
+                int errNum = execute(args, NULL);
+                free(args);
+                if (errNum == 1)
+                    continue;
+            }
+            break;
+        } else {
+            fprintf(stdout, "wish> ");
+            fflush(stdout);
+            args = malloc(100*sizeof(char));
+            int readStatus = readCommand(args, stdin);
+            if (readStatus == -1)
+                continue;   //if a built-in command is called, continue;
+            if (readStatus == 1)
+                break;
+            if (execute(args, NULL) == 1)
+                continue;   //if there is an error, continue
+            free(args);
+        }
+        if (isFinish)
+            break;
     }
     return 0;
 }
