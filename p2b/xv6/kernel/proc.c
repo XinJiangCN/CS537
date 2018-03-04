@@ -43,6 +43,7 @@ allocproc(void)
   return 0;
 
 found:
+  p->tickets = 1;
   p->state = EMBRYO;
   p->pid = nextpid++;
   release(&ptable.lock);
@@ -458,5 +459,10 @@ getpinfo(struct pstat *ps)
 
     }
     release(&ptable.lock);
+    return 0;
+}
+int
+settickets(int number){
+    proc -> tickets = number;
     return 0;
 }

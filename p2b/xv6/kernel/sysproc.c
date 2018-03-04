@@ -93,13 +93,19 @@ int
 sys_getpinfo(void)
 {
     struct pstat *ps_ptr;
-    if (argptr(0, (void*)&ps_ptr, sizeof(ps_ptr)) == -1)
+    if (argptr(0, (void*)&ps_ptr, sizeof(ps_ptr)) < 0)
+        return -1;
+    if (ps_ptr == NULL)
         return -1;
     return getpinfo(ps_ptr);
 }
 int 
 sys_settickets(void)
 {
-    
-    return 0;
+    int number;
+    if (argint(0, &number) < 0)
+       return -1;
+    if (number < 1)
+        return -1;
+    return settickets(number); 
 }
