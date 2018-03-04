@@ -246,6 +246,27 @@ wait(void)
   }
 }
 
+// Online help found on https://github.com/cmcqueen/simplerandom/blob/master/c/lecuyer/lfsr113.c
+// Credit to cmcqueen
+int random_int(void){
+    static int s1 = 157;
+    static int s2 = 199;
+    static int s3 = 1237;
+    static int s4 = 12345;
+    int b;
+    b = ((s1 << 6) ^ s1) >> 13;
+    s1 = ((s1 & 4294967294U) << 18) ^ b;
+    b  = ((s2 << 2) ^ s2) >> 27;
+    s2 = ((s2 & 4294967288U) << 2) ^ b;
+    b  = ((s3 << 13) ^ s3) >> 21;
+    s3 = ((s3 & 4294967280U) << 7) ^ b;
+    b  = ((s4 << 3) ^ s4) >> 12;
+    s4 = ((s4 & 4294967168U) << 13) ^ b;
+    int result = (s1^s2^s3^s4)* 3.1415926e-7;
+    if (result >= 0)
+        return result;
+    return result *= -1;
+}
 // Per-CPU process scheduler.
 // Each CPU calls scheduler() after setting itself up.
 // Scheduler never returns.  It loops, doing:
