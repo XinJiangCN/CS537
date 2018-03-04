@@ -43,8 +43,8 @@ allocproc(void)
   return 0;
 
 found:
-  p->tickets = 1;
   p->state = EMBRYO;
+  p->tickets = 1;
   p->pid = nextpid++;
   release(&ptable.lock);
 
@@ -452,11 +452,11 @@ getpinfo(struct pstat *ps)
     for (int i = 0; i < NPROC; i++){
         curr = &ptable.proc[i];
         ps -> pid[i] = curr -> pid;
+        ps -> tickets[i] = curr -> tickets;
         if (curr->state == UNUSED)
             ps->inuse[i] = 0;
         else
             ps->inuse[i] = 1;
-
     }
     release(&ptable.lock);
     return 0;
