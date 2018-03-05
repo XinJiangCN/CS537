@@ -45,6 +45,7 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->tickets = 1;
+  p->ticks = 0;
   p->pid = nextpid++;
   release(&ptable.lock);
 
@@ -134,7 +135,7 @@ fork(void)
   // Allocate process.
   if((np = allocproc()) == 0)
     return -1;
-
+    
   // Copy process state from p.
   if((np->pgdir = copyuvm(proc->pgdir, proc->sz)) == 0){
     kfree(np->kstack);
@@ -145,7 +146,7 @@ fork(void)
   np->sz = proc->sz;
   np->parent = proc;
   *np->tf = *proc->tf;
-
+  np -> tickets = proc -> tickets;
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
 
@@ -262,11 +263,46 @@ int random_int(void){
     s3 = ((s3 & 4294967280U) << 7) ^ b;
     b  = ((s4 << 3) ^ s4) >> 12;
     s4 = ((s4 & 4294967168U) << 13) ^ b;
-    int result = (s1^s2^s3^s4)* 3.1415926e-7;
+    int result = (s1^s2^s3^s4)* 3.1415926e-5;
     if (result >= 0)
         return result;
     return result *= -1;
 }
+/*
+#define SEED 987654321
+static unsigned int z1 = SEED, z2 = SEED, z3 = SEED, z4 = SEED;
+double lfrs (void)
+    {
+       unsigned int b;
+       b  = ((z1 << 6) ^ z1) >> 13;
+       z1 = ((z1 & 4294967294U) << 18) ^ b;
+       b  = ((z2 << 2) ^ z2) >> 27;
+       z2 = ((z2 & 4294967288U) << 2) ^ b;
+       b  = ((z3 << 13) ^ z3) >> 21;
+       z3 = ((z3 & 4294967280U) << 7) ^ b;
+       b  = ((z4 << 3) ^ z4) >> 12;
+       z4 = ((z4 & 4294967168U) << 13) ^ b;
+       return (z1 ^ z2 ^ z3 ^ z4) * 2.3283064365386963e-10;
+    }
+    
+    unsigned int prng(unsigned int rmax)
+    {
+       double rand = lfrs();
+       return (int)(rand * rmax);
+    }
+*/
+int lfsr = 1;
+int random(void) {
+       int i;
+       for(i=0; i<10000; i++){
+            lfsr = (lfsr >> 1) ^ (-(lfsr & 1u) & 0xd0000001u); /* taps 32 31 2      9 1 */
+            lfsr = (lfsr >> 1) ^ (-(lfsr & 1u) & 0xd0000001u); /* taps 32 31 2      9 1 */
+         }
+       if (lfsr > 0)
+       return lfsr;
+       else 
+           return lfsr *= -1;
+   }
 // Per-CPU process scheduler.
 // Each CPU calls scheduler() after setting itself up.
 // Scheduler never returns.  It loops, doing:
@@ -282,26 +318,48 @@ scheduler(void)
   for(;;){
     // Enable interrupts on this processor.
     sti();
+    int total_tickets = 0;
+    int random_num = 0;
 
-    // Loop over process table looking for process to run.
     acquire(&ptable.lock);
+    //get total number of tickets
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+     if(p->state != RUNNABLE)
+       continue;
+     total_tickets += p->tickets;
+    }
+    if (total_tickets > 0){
+        random_num = random();
+        random_num = random_num % total_tickets;
+    }
+    int counter = 0;
+    int winner_found = 0;
+    // Loop over process table looking for process to run.
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
         continue;
-
+      counter = counter + p->tickets;
+      if (counter >= random_num){
+        winner_found = 1; 
+      }
+    
+    if (winner_found){
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
+      p -> ticks++;
       proc = p;
       switchuvm(p);
       p->state = RUNNING;
       swtch(&cpu->scheduler, proc->context);
       switchkvm();
-
+      winner_found = 0;
+    } else 
+        continue;
       // Process is done running for now.
       // It should have changed its p->state before coming back.
       proc = 0;
-    }
+    } 
     release(&ptable.lock);
 
   }
@@ -474,6 +532,7 @@ getpinfo(struct pstat *ps)
         curr = &ptable.proc[i];
         ps -> pid[i] = curr -> pid;
         ps -> tickets[i] = curr -> tickets;
+        ps -> ticks[i] = curr -> ticks;
         if (curr->state == UNUSED)
             ps->inuse[i] = 0;
         else
