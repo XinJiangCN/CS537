@@ -249,29 +249,9 @@ wait(void)
 
 // Online help found on https://github.com/cmcqueen/simplerandom/blob/master/c/lecuyer/lfsr113.c
 // Credit to cmcqueen
-int random_int(void){
-    static int s1 = 157;
-    static int s2 = 199;
-    static int s3 = 1237;
-    static int s4 = 12345;
-    int b;
-    b = ((s1 << 6) ^ s1) >> 13;
-    s1 = ((s1 & 4294967294U) << 18) ^ b;
-    b  = ((s2 << 2) ^ s2) >> 27;
-    s2 = ((s2 & 4294967288U) << 2) ^ b;
-    b  = ((s3 << 13) ^ s3) >> 21;
-    s3 = ((s3 & 4294967280U) << 7) ^ b;
-    b  = ((s4 << 3) ^ s4) >> 12;
-    s4 = ((s4 & 4294967168U) << 13) ^ b;
-    int result = (s1^s2^s3^s4)* 3.1415926e-5;
-    if (result >= 0)
-        return result;
-    return result *= -1;
-}
-/*
 #define SEED 987654321
 static unsigned int z1 = SEED, z2 = SEED, z3 = SEED, z4 = SEED;
-double lfrs (void)
+double random_int (void)
     {
        unsigned int b;
        b  = ((z1 << 6) ^ z1) >> 13;
@@ -285,24 +265,16 @@ double lfrs (void)
        return (z1 ^ z2 ^ z3 ^ z4) * 2.3283064365386963e-10;
     }
     
-    unsigned int prng(unsigned int rmax)
+    unsigned int random(unsigned int max)
     {
-       double rand = lfrs();
-       return (int)(rand * rmax);
+       double rand = random_int();
+       int result = (int)(rand * max);
+       if (result < 0)
+           return result *= -1;
+       return result;
     }
-*/
-int lfsr = 1;
-int random(void) {
-       int i;
-       for(i=0; i<10000; i++){
-            lfsr = (lfsr >> 1) ^ (-(lfsr & 1u) & 0xd0000001u); /* taps 32 31 2      9 1 */
-            lfsr = (lfsr >> 1) ^ (-(lfsr & 1u) & 0xd0000001u); /* taps 32 31 2      9 1 */
-         }
-       if (lfsr > 0)
-       return lfsr;
-       else 
-           return lfsr *= -1;
-   }
+
+
 // Per-CPU process scheduler.
 // Each CPU calls scheduler() after setting itself up.
 // Scheduler never returns.  It loops, doing:
@@ -329,21 +301,23 @@ scheduler(void)
      total_tickets += p->tickets;
     }
     if (total_tickets > 0){
-        random_num = random();
+        random_num = random(total_tickets);
         random_num = random_num % total_tickets;
     }
-    int counter = 0;
     int winner_found = 0;
     // Loop over process table looking for process to run.
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
         continue;
-      counter = counter + p->tickets;
-      if (counter >= random_num){
-        winner_found = 1; 
+     if (winner_found){
+        break;
       }
+      if (p->tickets < random_num){
+        random_num = random_num - p->tickets;
+        continue;
+      }
+        winner_found = 1; 
     
-    if (winner_found){
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
@@ -353,9 +327,6 @@ scheduler(void)
       p->state = RUNNING;
       swtch(&cpu->scheduler, proc->context);
       switchkvm();
-      winner_found = 0;
-    } else 
-        continue;
       // Process is done running for now.
       // It should have changed its p->state before coming back.
       proc = 0;
