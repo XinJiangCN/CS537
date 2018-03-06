@@ -1,9 +1,0 @@
-To run the tests:
-
-1. Navigate to the base directory of your xv6 code
-2. From that directory, execute the runtests executable in this directory
-  Like:  ~cs537-2/ta/tests/2b-new/runtests
-3. The individual tests are available in the ctests/ folder. You can copy the file you want into your user program and run it locally as you wish.
-The output from runtests will indicate which tests you have passed and which you failed (if any)
-
-For more options available while testing, run '.../runtests -h'
