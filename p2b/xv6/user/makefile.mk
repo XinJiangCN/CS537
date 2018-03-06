@@ -16,8 +16,9 @@ USER_PROGS := \
 	tester\
 	usertests\
 	wc\
-	zombie
-
+	zombie\
+	graphplot
+	
 USER_PROGS := $(addprefix user/, $(USER_PROGS))
 
 # user library files
