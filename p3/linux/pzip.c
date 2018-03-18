@@ -13,8 +13,8 @@ char* file_names[10];
 
 char last = '\0';
 char curr = '\0';
-int count = 1;
-
+char output[1000];
+int output_index = 0;
 // Function declearation
 int open_file();
 void* zip(void* args){
@@ -31,6 +31,7 @@ void* zip(void* args){
     size_t len = 0;
     ssize_t nread;
 
+    int count = 1;
     pthread_mutex_unlock(&mutex);
     while (1){
         if ((nread = getline(&line, &len, fp)) == -1)
@@ -40,18 +41,20 @@ void* zip(void* args){
             break;
 
 
-        if (last == '\0' )
-            last = getc(fp);
+        if (last == '\0' || curr != EOF)
+            last = *line;
         while (1){
             if (*line == EOF || *line == '\0')
                 break;
+            curr = *line;
             if (curr == last) {
                 // if the characters repeated
                 count += 1;
             } else {
                 //print the number as well as the character
-                fwrite(&count, 4, 1, stdout);
-                fwrite(&last, 1, 1, stdout);
+                output[output_index++] = count + '0';
+                output[output_index++] = last;
+                output[output_index] = '\0';
                 count = 1;
             }
             last = curr;
@@ -109,6 +112,7 @@ int main(int argc, char* argv[]){
                 if(pthread_join(threads[j], NULL) != 0)
                     printf("ERROR WAITING \n");
         }
+        fwrite(output, 1, sizeof(output), stdout);
         pthread_exit(NULL);
     }
 }
