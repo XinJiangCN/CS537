@@ -15,3 +15,7 @@ Lottery scheduler for xv6
 # P3
 Concurrency version of my-zip
 and Segmentation fault handler for xv6
+
+
+# P4b 
+thread sys calls and library of xv6
