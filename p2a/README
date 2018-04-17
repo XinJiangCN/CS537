@@ -1,0 +1,15 @@
+# Program P2a
+This is a simple unix shell written in C called WISH. 
+# Basic Functions
+
+## Built-in Functions
+cd, path, exit
+## Redirect
+It could, like most of the unix shells, redirect the output of program to a local files. 
+## Multi-Commands
+It could receive multiple commands, seperated by &, and execute them one by one. It could also work with multiple redirected commands.
+## Program Error
+All of the error will be printed to stderr.
+
+# Author
+Jason Jiang

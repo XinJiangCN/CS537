@@ -1,0 +1,9 @@
+path /bin /u/c/s/cs537-1/tests/tests-wish
+p1.sh > output201 & p2.sh > output202 & p3.sh > output203
+cat output201
+cat output202
+cat output203
+rm -rf output201
+rm -rf output202
+rm -rf output203
+exit

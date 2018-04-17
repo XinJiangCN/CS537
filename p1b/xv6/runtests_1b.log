@@ -1,0 +1,207 @@
+starting build
+
+**********************************************************************
+
+Test build
+build xv6 using make
+
+**********************************************************************
+Trying to build project using make
+make
+make: Nothing to be done for 'all'.
+
+
+test build PASSED
+ (build xv6 using make)
+
+starting readcount1
+
+**********************************************************************
+
+Test readcount1
+call getreadcount(), value > 0
+
+**********************************************************************
+Running xv6 user progam /u/c/s/cs537-1/ta/tests/1b/ctests/readcount1.c
+Trying to build project using make
+make
+gcc  -I include -nostdinc -Wall -Werror -ggdb -fno-pic -fno-builtin -fno-strict-aliasing -fno-stack-protector -m32 \
+	-M -MG user/tester.c -MF user/tester.d -MT user/tester.d -MT user/tester.o
+gcc  -I include -nostdinc -Wall -Werror -ggdb -fno-pic -fno-builtin -fno-strict-aliasing -fno-stack-protector -m32 -c -o user/tester.o user/tester.c
+ld  -m    elf_i386 -nostdlib --omagic --entry=main --section-start=.text=0x0 --output=user/bin/tester user/tester.o user/ulib.o user/usys.o user/printf.o user/umalloc.o
+cp user/bin/tester fs/tester
+./tools/mkfs fs.img fs
+used 29 (bit 1 ninode 26) free 29 total 1024
+kill
+usertests
+echo
+rm
+wc
+grep
+mkdir
+stressfs
+cat
+sh
+forktest
+tester
+README
+init
+ln
+ls
+zombie
+balloc: first 407 blocks have been allocated
+balloc: write bitmap block at sector 28
+rm user/bin/tester
+make qemu-nox CPUS=1
+Ctrl+a h for help
+/u/c/s/cs537-1/ta/tools/qemu -nographic -hdb fs.img xv6.img -smp 1
+WARNING: Image format was not specified for 'fs.img' and probing guessed raw.
+         Automatically detecting the format is dangerous for raw images, write operations on block 0 will be restricted.
+         Specify the 'raw' format explicitly to remove the restrictions.
+WARNING: Image format was not specified for 'xv6.img' and probing guessed raw.
+         Automatically detecting the format is dangerous for raw images, write operations on block 0 will be restricted.
+         Specify the 'raw' format explicitly to remove the restrictions.
+xv6...
+cpu0: starting
+init: starting sh
+$ tester
+tester
+TEST PASSED
+
+
+test readcount1 PASSED (1 of 1)
+ (call getreadcount(), value > 0)
+
+starting readcount2
+
+**********************************************************************
+
+Test readcount2
+call readcount() twice, no read() between
+
+**********************************************************************
+Running xv6 user progam /u/c/s/cs537-1/ta/tests/1b/ctests/readcount2.c
+Trying to build project using make
+make
+gcc  -I include -nostdinc -Wall -Werror -ggdb -fno-pic -fno-builtin -fno-strict-aliasing -fno-stack-protector -m32 \
+	-M -MG user/tester.c -MF user/tester.d -MT user/tester.d -MT user/tester.o
+gcc  -I include -nostdinc -Wall -Werror -ggdb -fno-pic -fno-builtin -fno-strict-aliasing -fno-stack-protector -m32 -c -o user/tester.o user/tester.c
+ld  -m    elf_i386 -nostdlib --omagic --entry=main --section-start=.text=0x0 --output=user/bin/tester user/tester.o user/ulib.o user/usys.o user/printf.o user/umalloc.o
+cp user/bin/tester fs/tester
+./tools/mkfs fs.img fs
+used 29 (bit 1 ninode 26) free 29 total 1024
+kill
+usertests
+echo
+rm
+wc
+grep
+mkdir
+stressfs
+cat
+sh
+forktest
+tester
+README
+init
+ln
+ls
+zombie
+balloc: first 407 blocks have been allocated
+balloc: write bitmap block at sector 28
+rm user/bin/tester
+make qemu-nox CPUS=1
+Ctrl+a h for help
+/u/c/s/cs537-1/ta/tools/qemu -nographic -hdb fs.img xv6.img -smp 1
+WARNING: Image format was not specified for 'fs.img' and probing guessed raw.
+         Automatically detecting the format is dangerous for raw images, write operations on block 0 will be restricted.
+         Specify the 'raw' format explicitly to remove the restrictions.
+WARNING: Image format was not specified for 'xv6.img' and probing guessed raw.
+         Automatically detecting the format is dangerous for raw images, write operations on block 0 will be restricted.
+         Specify the 'raw' format explicitly to remove the restrictions.
+xv6...
+cpu0: starting
+init: starting sh
+$ tester
+tester
+TEST PASSED
+
+
+test readcount2 PASSED (1 of 1)
+ (call readcount() twice, no read() between)
+
+starting readcount3
+
+**********************************************************************
+
+Test readcount3
+called readcount() with 5 reads in between
+
+**********************************************************************
+Running xv6 user progam /u/c/s/cs537-1/ta/tests/1b/ctests/readcount3.c
+Trying to build project using make
+make
+gcc  -I include -nostdinc -Wall -Werror -ggdb -fno-pic -fno-builtin -fno-strict-aliasing -fno-stack-protector -m32 \
+	-M -MG user/tester.c -MF user/tester.d -MT user/tester.d -MT user/tester.o
+gcc  -I include -nostdinc -Wall -Werror -ggdb -fno-pic -fno-builtin -fno-strict-aliasing -fno-stack-protector -m32 -c -o user/tester.o user/tester.c
+ld  -m    elf_i386 -nostdlib --omagic --entry=main --section-start=.text=0x0 --output=user/bin/tester user/tester.o user/ulib.o user/usys.o user/printf.o user/umalloc.o
+cp user/bin/tester fs/tester
+./tools/mkfs fs.img fs
+used 29 (bit 1 ninode 26) free 29 total 1024
+kill
+usertests
+echo
+rm
+wc
+grep
+mkdir
+stressfs
+cat
+sh
+forktest
+tester
+README
+init
+ln
+ls
+zombie
+balloc: first 408 blocks have been allocated
+balloc: write bitmap block at sector 28
+rm user/bin/tester
+make qemu-nox CPUS=1
+Ctrl+a h for help
+/u/c/s/cs537-1/ta/tools/qemu -nographic -hdb fs.img xv6.img -smp 1
+WARNING: Image format was not specified for 'fs.img' and probing guessed raw.
+         Automatically detecting the format is dangerous for raw images, write operations on block 0 will be restricted.
+         Specify the 'raw' format explicitly to remove the restrictions.
+WARNING: Image format was not specified for 'xv6.img' and probing guessed raw.
+         Automatically detecting the format is dangerous for raw images, write operations on block 0 will be restricted.
+         Specify the 'raw' format explicitly to remove the restrictions.
+xv6...
+cpu0: starting
+init: starting sh
+$ tester
+tester
+TEST PASSED
+
+
+test readcount3 PASSED (1 of 1)
+ (called readcount() with 5 reads in between)
+
+**********************************************************************
+Summary:
+test build PASSED
+ (build xv6 using make)
+
+test readcount1 PASSED (1 of 1)
+ (call getreadcount(), value > 0)
+
+test readcount2 PASSED (1 of 1)
+ (call readcount() twice, no read() between)
+
+test readcount3 PASSED (1 of 1)
+ (called readcount() with 5 reads in between)
+
+Passed 4 of 4 tests.
+Overall 4 of 4
+Points 3 of 3

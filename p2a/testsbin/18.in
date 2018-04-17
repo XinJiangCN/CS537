@@ -1,0 +1,3 @@
+path /u/c/s/cs537-1/tests/tests-wish
+p1.sh & p2.sh & p3.sh
+exit
